@@ -1,6 +1,8 @@
 import numpy as np
 import cv2
 from skimage.feature import hog
+import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
 
 
 def convert_color(img, conv='RGB2YCrCb'):
@@ -257,7 +259,7 @@ def search_windows(img, windows, clf, scaler, color_space='RGB',
 
 def visualize(fig, rows, cols, imgs, titles):
     for i, img in enumerate(imgs):
-        plt.subplot(rows, coles, i+1)
+        plt.subplot(rows, cols, i+1)
         plt.title(i+1)
         img_dims = len(img.shape)
         if img_dims < 3:
@@ -266,3 +268,4 @@ def visualize(fig, rows, cols, imgs, titles):
         else:
             plt.imshow(img)
             plt.title(titles[i])
+    plt.show()
