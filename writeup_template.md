@@ -70,7 +70,7 @@ First, I loaded the trained SVC and the X scaler. Then I applied the `slide_wind
 
 I decided to look closer to the horizon with small windows of 64 by 64 pixels and an overlap of 50%. In the middle range I decided to go with 128 by 128 pixels and an overlap of also 50%. Clsoe to the front of the  car I searched in 256 by 256 windows with an overlap of 75%. I achieved slightly better results with an overlap of 75% for the medium and smaller images, but decided to keep the total amount of windows down to reduce processing time. All windows were then searched for possibly containing cars by the trained linear SVC. I used the helper function `search_windows` which returned the "hot windows" where cars were detected.
 
-In order to optimize performance I decided to calculate the HOG once per image and then apply the sliding window approach. This was first done with only one window size (one scale) to verify performance. I then added the feature of a heatmap showing all pixels with positive car detections. I then applied a threshold to the heatmap to only show the pixels where at least 2 windows were overlapping in order to reduce false positives. After that, I applied labels to the heatmap to see how many cars were found in the picture. Finally, I drew a single box around the found spots in a copy of the original image. After I verified the performance by looking at the results of each step, I went back and implemented the three different window sizes by applying different scaling factors to the image.
+In order to optimize performance I decided to calculate the HOG once per image and then apply the sliding window approach. This was first done with only one window size (one scale) to verify performance. I then added the feature of a heatmap showing all pixels with positive car detections. I then applied a threshold to the heatmap to only show the pixels where at least 2 windows were overlapping in order to reduce false positives. After that, I applied labels to the heatmap to see how many cars were found in the picture. Finally, I drew a single box around the found spots in a copy of the original image. After I verified the performance by looking at the results of each step, I went back and implemented the three different window sizes by applying different scaling factors to the image. The implementation for processing the sample images was put into the function `find_cars()`. This function returns the windows where the SVC detected a car, the heatmap of the image and the total amount of windows searched.
 
 You can see here the different steps performed on the image on one of the sample images:
 
@@ -82,8 +82,10 @@ You can see here the different steps performed on the image on one of the sample
 The code for this step is contained in the file `vehicle_detection.py`. All help functions can be found in `functions.py`.
 
 #### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (somewhat wobbly or unstable bounding boxes are ok as long as you are identifying the vehicles most of the time with minimal false positives.)
-Here's a [link to my video result](./project_video.mp4)
 
+The function `process_image()` was created in order to process only one image at a time and returns an image with bounding boxes around the detected cars. The images were then saved as a video that can be found here: [link to my video result](./project_video.mp4)
+
+The same strategy as before was applied (heatmap of positive detections, apply threshold, apply `scipy.ndimage.measurements.label()`) in order to remove false positives and to combine overlapping bounding boxes.
 
 #### 2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
 
@@ -109,5 +111,5 @@ Here's an example result showing the heatmap from a series of frames of video, t
 
 #### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+The pipeline detects cars reliably. The processing time per image is fairly high and would not be suitable for real time processing. 
 
