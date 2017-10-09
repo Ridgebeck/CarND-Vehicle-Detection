@@ -16,8 +16,8 @@ The overall goal of this project was to detect cars in a video and mark them vis
 [//]: # (Image References)
 [image1]: ./examples/data_set_example.jpg
 [image2]: ./examples/HOG_features.jpg
-[image3]: ./examples/sliding_windows.jpg
-[image4]: ./examples/boxes_heatmap_label.jpg
+[image3]: ./examples/boxes_heatmap_label.jpg
+[image4]: ./examples/sliding_windows.jpg
 [image5]: ./examples/bboxes_and_heat.png
 [image6]: ./examples/labels_map.png
 [image7]: ./examples/output_bboxes.png
