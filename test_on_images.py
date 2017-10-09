@@ -101,7 +101,7 @@ out_titles = []
 out_boxes = []
 ystart = 350
 ystop = 670 #542
-scale = 1 #1.5
+scale = 1.5 #1.5
 
 #pix_per_cell = 6
 #cell_per_block = 2
@@ -153,7 +153,6 @@ for img_src in example_images:
             ytop = ypos * pix_per_cell
 
             subimg = cv2.resize(ctrans_tosearch[ytop:ytop + window, xleft:xleft + window], (64, 64))
-
             spatial_features = functions.bin_spatial(subimg, size=spatial_size)
             hist_features = functions.color_hist(subimg, nbins=hist_bins)
 
