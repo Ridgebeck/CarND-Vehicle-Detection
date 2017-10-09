@@ -90,7 +90,7 @@ The same strategy as before was applied (heatmap of positive detections, apply t
 
 #### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-The pipeline detects cars reliably. The processing time per image is fairly high and would probably not be suitable for real time processing. One of the reasons is that the HOG features are still calculated every time when a different window size (scale) is used. This could be further improved.
+The pipeline detects cars reliably up to a certain distance. The processing time per image is fairly high and would probably not be suitable for real time processing. One of the reasons is that the HOG features are still calculated every time when a different window size (scale) is used. This could be further improved.
 
 The pipline also detects cars on the other side of the road, which is not bad in this project as it was not required to distinct between the cars going in the same direction or the other way. In reality this would lead to problems, so the pipeline could be trained to only look in specific areas or better the pipeline is trained to define if a car is seen from the front or the rear by having another training set of cars photographed from the front.
 
