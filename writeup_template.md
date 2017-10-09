@@ -1,18 +1,17 @@
-##Writeup Template
-###You can use this file as a template for your writeup if you want to submit it as a markdown file, but feel free to use some other method and submit a pdf if you prefer.
 
 ---
 
 **Vehicle Detection Project**
 
-The goals / steps of this project are the following:
+The overall goal of this project was to detect cars in a video and mark them visually with bounding boxes. In order to achieve that I started with a couple test images derived from that video and built a pipeline to process those images in multiple steps. The steps are summarized as follows:
 
-* Perform a Histogram of Oriented Gradients (HOG) feature extraction on a labeled training set of images and train a classifier Linear SVM classifier
-* Optionally, you can also apply a color transform and append binned color features, as well as histograms of color, to your HOG feature vector. 
-* Note: for those first two steps don't forget to normalize your features and randomize a selection for training and testing.
-* Implement a sliding-window technique and use your trained classifier to search for vehicles in images.
-* Run your pipeline on a video stream (start with the test_video.mp4 and later implement on full project_video.mp4) and create a heat map of recurring detections frame by frame to reject outliers and follow detected vehicles.
-* Estimate a bounding box for vehicles detected.
+* A labeled training set of images containing cars and no cars was used to train a linear SVC with the help of a Histogram of Oriented Grandients (HOG) feature extraction.
+* The test images were analyzed via a sliding window technique and a prediction on those windows was performed by the trained SVC in order to indentify cars in the image. I used different sizes of windows (or different scales on the image) in order to increase accuracy.
+* Those detected areas ("hot pixels") were then applied onto a heatmap and a threshold was used to remove false positives.
+* The thresholded heatmap was then labeled in order to calculate the number and location of the cars in the image.
+* The label data was then used to draw bounding boxes in the detected locations over a copy of the original image to demonstrate that a detection of the cars in the image was successful.
+* The pipeline was then tested on the images and the parameters were tuned to achieve good results with a high reliability and less outliers.
+* After that the pipline was modified and applied to the project video. The result was the video "output_video.mp4".
 
 [//]: # (Image References)
 [image1]: ./examples/car_not_car.png
@@ -22,10 +21,7 @@ The goals / steps of this project are the following:
 [image5]: ./examples/bboxes_and_heat.png
 [image6]: ./examples/labels_map.png
 [image7]: ./examples/output_bboxes.png
-[video1]: ./project_video.mp4
-
-## [Rubric](https://review.udacity.com/#!/rubrics/513/view) Points
-###Here I will consider the rubric points individually and describe how I addressed each point in my implementation.  
+[video1]: ./project_video.mp4 
 
 ---
 ###Writeup / README
