@@ -29,7 +29,7 @@ The overall goal of this project was to detect cars in a video and mark them vis
 
 The code for this step is contained in the file `train_SVC.py`. All help functions can be found in `functions.py`.
 
-#### 1. Reading in the training data images
+#### Reading in the training data images
 
 I started by reading in all the `vehicle` and `non-vehicle` images. I then verified the total amount of vehicle and non-vehicle images and looked randomly at some of the data to get an impresion of the quality of the data set. Here is an example of one of each of the `vehicle` and `non-vehicle` classes:
 
@@ -47,7 +47,7 @@ I then explored different color spaces and different `skimage.hog()` parameters,
 `hist_feat = True`
 `hog_feat = True`
 
-I tried the different color spaces and it seemed that RGB and YCrCb delivered the best results, while YCrCb was a bit more reliable. It seems that the built-in algorithms for the HOG feature extraction work a bit better in YCrCb. I set the orientations to the maximum recommended amount of 9. I could see a noticebale difference for values above 9. The hog channel 0 seemed to be working better than 1 and 2, but `ALL` delivered the best performance. Looking at all channels also adds more reliability if a feature was not shown well in one specific channel. All features were enabled. `spatial_size`, `pixels_per_cell`, `cell_per_block`, and `hist_bins` were selected based on how much they increase the result and how much the influenced the performance. For that purpose I stopped the time for the calcuation of the features and compared it against each other.
+I tried the different color spaces and it seemed that RGB and YCrCb delivered the best results, while YCrCb was a bit more reliable. It seems that the built-in algorithms for the HOG feature extraction work a bit better in YCrCb. I set the orientations to the maximum recommended amount of 9. I could see a noticebale difference for values above 9. The hog channel 0 seemed to be working better than 1 and 2, but "ALL" delivered the best performance. Looking at all channels also adds more reliability if a feature was not shown well in one specific channel. All features were enabled. `spatial_size`, `pixels_per_cell`, `cell_per_block`, and `hist_bins` were selected based on how much they increase the result and how much the influenced the performance. For that purpose I stopped the time for the calcuation of the features and compared it against each other.
 
 Here is an example of an image using the above stated parameters:
 
@@ -56,7 +56,7 @@ Here is an example of an image using the above stated parameters:
 
 Then, I had to stack the features and apply a (per column) X scaler and create a features vector.
 
-#### 2. Training the SVC
+#### Training the SVC
 
 I split up the data into randomized training and test sets and fitted it to the linear SVC. I then trained with the same parameters a couple of times and looked at the resulting test accuracy. I started with around 70% and ended (with the above mentioned parameters) at roughly 99% accuracy. The trained SVC as well as the X scaler was then saved in a pickle file.
 
@@ -64,20 +64,22 @@ I split up the data into randomized training and test sets and fitted it to the 
 
 The code for this step is contained in the file `test_on_images_1.py` and `test_on_images_2.py`. All help functions can be found in `functions.py`.
 
-#### 1. Sliding windows on the test images
+#### Sliding windows on the test images
 
-First, I loaded the trained SVC and the X scaler. Then 
+First, I loaded the trained SVC and the X scaler. Then I applied the `slide_window()` function in `functions.py` to create windows in a specific size in a specific area with a defined overlap.  I then visualized the windows and defined a suitable size based on the camera position used in the sample images.
+
+I decided to look closer to the horizon with small windows of 64 by 64 pixels and an overlap of 50%. In the middle range I decided to go with 128 by 128 pixels and an overlap of also 50%. Clsoe to the front of the  car I searched in 256 by 256 windows with an overlap of 75%. I achieved slightly better results with an overlap of 75% for the medium and smaller images, but decided to keep the total amount of windows down to reduce processing time. All windows were then searched for possibly containing cars by the trained linear SVC. I used the helper function `search_windows` which returned the "hot windows" where cars were detected.
+
+In order to optimize performance I decided to calculate the HOG once per image and then apply the sliding window approach. This was first done with only one window size (one scale) to verify performance. I then added the feature of a heatmap showing all pixels with positive car detections. I then applied a threshold to the heatmap to only show the pixels where at least 2 windows were overlapping in order to reduce false positives. After that, I applied labels to the heatmap to see how many cars were found in the picture. Finally, I drew a single box around the found spots in a copy of the original image. After I verified the performance by looking at the results of each step, I went back and implemented the three different window sizes by applying different scaling factors to the image.
+
+You can see here the different steps performed on the image on one of the sample images:
 
 ![alt text][image3]
 
-#### 2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
-
-Ultimately I searched on two scales using YCrCb 3-channel HOG features plus spatially binned color and histograms of color in the feature vector, which provided a nice result.  Here are some example images:
-
-![alt text][image4]
----
 
 ### Video Implementation
+
+The code for this step is contained in the file `vehicle_detection.py`. All help functions can be found in `functions.py`.
 
 #### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (somewhat wobbly or unstable bounding boxes are ok as long as you are identifying the vehicles most of the time with minimal false positives.)
 Here's a [link to my video result](./project_video.mp4)
