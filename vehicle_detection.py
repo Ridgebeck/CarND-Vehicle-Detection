@@ -1,93 +1,95 @@
-
+import glob
+import functions
+import cv2
+import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
+import numpy as np
+import time
+from sklearn.externals import joblib
 from scipy.ndimage.measurements import label
 
-def find_cars(img, scale):
 
+# Load trained SVC from pickled file
+svc = joblib.load('trained_svc.pkl') 
+# Load scaler from training data
+X_scaler = joblib.load('x_scaler.pkl')
+
+
+# Define feature parameters
+color_space = 'YCrCb' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
+orient = 9  # HOG orientations
+pix_per_cell = 8 # HOG pixels per cell
+cell_per_block = 2 # HOG cells per block
+hog_channel = 'ALL' # Can be 0, 1, 2, or "ALL"
+spatial_size = (16, 16) # Spatial binning dimensions
+hist_bins = 32    # Number of histogram bins
+spatial_feat = True # Spatial features on or off
+hist_feat = True # Histogram features on or off
+hog_feat = True # HOG features on or off
+
+
+# path to images
+#searchpath = 'test_images/*'
+#example_images = glob.glob(searchpath)
+
+# define empty lists for images and titles
+#images = []
+#titles = []
+
+
+def process_image(img):
+    t1 = time.time()
+    #searched_windows = 0
+    # threshold for heatmap
+    threshold = 2
+    #img = mpimg.imread(img_src)
     draw_img = np.copy(img)
-    heatmap = np.zeros_like(img[:,:,0])
-    img = img.astype(np.float32)/255 # Convert from jpg to png values
 
-    img_tosearch = img[ystart:ystop,:,:]
-    ctrans_tosearch = convert_color(img_tosearch, conv='RGB2YCrCb')
-    if scale != 1:
-        imshape = ctrans_tosearch.shape
-        ctrans_tosearch = cv2.resize(ctrans_tosearch, (np.int(imshape[1]/scale), np.int(imshape[0]/scale)))
-    
-    ch1 = ctrans_tosearch[:,:,0]
-    ch2 = ctrans_tosearch[:,:,1]                                
-    ch3 = ctrans_tosearch[:,:,2]
-    
-    nxblocks = (ch1.shape[1] // pix_per_cell) - 1
-    nyblocks = (ch1.shape[0] // pix_per_cell) - 1
-    nfeat_per_block = orient * cell_per_block ** 2
-    window = 64
-    nblocks_per_window = (window // pix_per_cell) - 1
+    # Search for smaller appearing vehicles in the distance
+    ystart = 414
+    ystop = 414 + 96
+    scale = 1
     cells_per_step = 2
-    nxsteps = (nxblocks - nblocks_per_window) // cells_per_step
-    nysteps = (nyblocks - nblocks_per_window) // cells_per_step
+    windows_far, heatmap_far, searched_windows_far = functions.find_cars(img, cells_per_step, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
 
-    hog1 = functions.get_hog_features(ch1, orient, pix_per_cell, cell_per_block, feature_vec=False)
-    hog2 = functions.get_hog_features(ch2, orient, pix_per_cell, cell_per_block, feature_vec=False)
-    hog3 = functions.get_hog_features(ch3, orient, pix_per_cell, cell_per_block, feature_vec=False)
-                                                
-    for xb in range(nxsteps):
-        for yb in range(nysteps):
-            count += 1
-            ypos = yb * cells_per_step
-            xpos = xb * cells_per_step
+    # Search for middle of the visual field with medium window size
+    ystart = 350
+    ystop = 350 + 192
+    scale = 1.5
+    cells_per_step = 2
+    windows_middle, heatmap_middle, searched_windows_middle = functions.find_cars(img, cells_per_step, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
 
-            hog_feat1 = hog1[ypos:ypos + nblocks_per_window, xpos:xpos + nblocks_per_window].ravel()
-            hog_feat2 = hog2[ypos:ypos + nblocks_per_window, xpos:xpos + nblocks_per_window].ravel()
-            hog_feat3 = hog3[ypos:ypos + nblocks_per_window, xpos:xpos + nblocks_per_window].ravel()
-            hog_features = np.hstack((hog_feat1, hog_feat2, hog_feat3))
+    # Search for close to the camera for vehicles that appear large
+    ystart = 350
+    ystop = 670
+    scale = 3
+    cells_per_step = 2
+    windows_near, heatmap_near, searched_windows_near = functions.find_cars(img, cells_per_step, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
 
-            xleft = xpos * pix_per_cell
-            ytop = ypos * pix_per_cell
+    # combine all windows
+    windows = windows_far + windows_middle + windows_near
 
-            subimg = cv2.resize(ctrans_tosearch[ytop:ytop + window, xleft:xleft + window], (64, 64))
+    # combine all heatmaps
+    heatmap = heatmap_far + heatmap_middle + heatmap_near
 
-            spatial_features = functions.bin_spatial(subimg, size=spatial_size)
-            hist_features = functions.color_hist(subimg, nbins=hist_bins)
+    # apply threshold to the heatmap
+    heatmap = functions.apply_threshold(heatmap, threshold)
+    # apply labels to the heatmap
+    labels = label(heatmap)
+    # draw labels on a copy of the image
+    labeled_image = functions.draw_labeled_bboxes(draw_img, labels)
 
-            test_features = X_scaler.transform(np.hstack((spatial_features, hist_features, hog_features)).reshape(1, -1))
-
-            test_prediction = svc.predict(test_features)
-
-            if test_prediction == 1:
-                xbox_left = np.int(xleft * scale)
-                ytop_draw = np.int(ytop * scale)
-                win_draw = np.int(window * scale)
-                cv2.rectangle(draw_img, (xbox_left, ytop_draw + ystart), (xbox_left + win_draw, ytop_draw + win_draw + ystart),(0, 0, 255))
-                img_boxes.append(((xbox_left, ytop_draw + ystart), (xbox_left + win_draw, ytop_draw + win_draw + ystart)))
-                heatmap[ytop_draw + ystart:ytop_draw + win_draw + ystart, xbox_left:xbox_left + win_draw] += 1
-
-    return draw_img, heatmap
-
-def apply_threshold(heatmap, threshold):
-    heatmap[heatmap <= threshold] = 0
-    return heatmap
-
-def draw_labeled_bboxes(img, labels):
-    # go through all detected cars
-    for car_number in range(1, labels[1]+1):
-        # find pixels whith each car number label value
-        nonzero = (labels[0] == car_number).nonzero()
-        # identify x and y values for those detected pixels
-        nonzeroy = np.array(nonzero[0])
-        nonzerox = np.array(nonzero[1])
-        # define a bounding box
-        bbox = ((np.min(nonzerox), np.min(nonzeroy), np.max(nonzerox), np.max(nonzeroy)))
-        # draw the box
-        cv2.rectangle(img, bbox[0], bbox[1], (0,0,255),6)
-    # return the image
-    return img
+    return labeled_image
 
 
-out_images = []
-out_maps = []
-out_titles = []
-out_boxes = []
-ystart = 350
-ystop = 542
-scale = 1 #1.5
 
+from moviepy.editor import VideoFileClip
+from IPython.display import HTML
+
+test_output = 'test.mp4'
+
+#clip = VideoFileClip("test_video.mp4")
+clip = VideoFileClip("project_video.mp4")
+test_clip = clip.fl_image(process_image)
+
+test_clip.write_videofile(test_output, audio = False)
